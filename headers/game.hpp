@@ -1,7 +1,12 @@
 #pragma once
 
+#include <chrono>
+#include <thread>
 #include "deck.hpp"
 #include "hand.hpp"
+
+#define VISIBLE true
+#define HIDDEN false
 
 enum class GameStatus {
 	INIT,
@@ -31,5 +36,8 @@ class Game {
 		Game();
 
 		GameStatus getStatus() const { return this->gameStatus; }
-		GameStatus checkImediate();
+		void checkImediate();
+		void display();
+		void clearScreen();
+		void start();
 };

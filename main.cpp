@@ -5,25 +5,23 @@
 int main() {
 	Game game;
 
+	game.start();
+
 	switch (game.getStatus()) {
 		case GameStatus::PLAYER_WIN: {
-			std::cout << "Vous avez gagné." << std::endl;
+			std::cout << "Vous avez gagné !" << std::endl;
 			break;
 		}
 		case GameStatus::DEALER_WIN: {
-			std::cout << "Vous avez perdu." << std::endl;
+			std::cout << "Le croupier a gagné !" << std::endl;
 			break;
 		}
 		case GameStatus::PUSH: {
-			std::cout << "Vous avez fais égalité." << std::endl;
-			break;
-		}
-		case GameStatus::PLAYER_TURN: {
-			std::cout << "La game est en cours..." << std::endl;
+			std::cout << "Égalité !" << std::endl;
 			break;
 		}
 		default: {
-			std::cout << "Error" << std::endl;
+			std::cout << "Le jeu s'est terminé de manière inattendue." << std::endl;
 			break;
 		}
 	}
