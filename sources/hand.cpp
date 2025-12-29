@@ -29,11 +29,28 @@ void Hand::recomputeScore() {
     }
 }
 
+static void printCardsRow(const std::vector<std::vector<std::string>>& sprites) {
+    if (sprites.empty()) return;
+    const size_t H = sprites[0].size();
+
+    for (size_t y = 0; y < H; ++y) {
+        for (size_t i = 0; i < sprites.size(); ++i) {
+            std::cout << sprites[i][y];
+            if (i + 1 < sprites.size()) std::cout << "  ";
+        }
+        std::cout << "\n";
+    }
+}
+
 void Hand::display() {
 	this->recomputeScore();
-	
-	std::cout << "[ Hand ] Score : " << this->visibleScore << std::endl;
-	for (Card card: this->cards) {
-		card.display();
-	}
+
+	std::cout << " Score : " << this->visibleScore << "\n\n";
+
+    std::vector<std::vector<std::string>> sprites;
+    sprites.reserve(this->cards.size());
+    for (const Card& card : this->cards) {
+        sprites.push_back(card.render());
+    }
+    printCardsRow(sprites);
 }

@@ -36,9 +36,3 @@ Card Deck::draw() {
 	this->cards.erase(this->cards.begin());
 	return card;
 }
-
-void Deck::debug() {
-	std::cout << "[ DEBUG ] first card :" << std::endl;
-	this->cards.front().display();
-	std::cout << std::endl;
-}

@@ -15,16 +15,16 @@ void Game::checkImediate() {
 	bool dBJ = this->dealerHand.isBlackjack();
 
 	if (pBJ && dBJ) this->gameStatus = GameStatus::PUSH;
-	if (pBJ) this->gameStatus = GameStatus::PLAYER_WIN;
-	if (dBJ) this->gameStatus = GameStatus::DEALER_WIN;
+	else if (pBJ) this->gameStatus = GameStatus::PLAYER_WIN;
+	else if (dBJ) this->gameStatus = GameStatus::DEALER_WIN;
 }
 
 void Game::display() {
-	std::cout << "=== Dealer Hand ===" << std::endl;
+	std::cout << "=== Main du croupier ===" << std::endl;
 	this->dealerHand.display();
 	std::cout << std::endl;
 
-	std::cout << "=== Player Hand ===" << std::endl;
+	std::cout << "=== Votre main ===" << std::endl;
 	this->playerHand.display();
 }
 
@@ -79,9 +79,15 @@ void Game::start() {
 				this->display();
 
 				this->dealerHand.getCurrentCard().setVisibility(VISIBLE);
+				this->clearScreen();
+				this->display();
+				std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 
 				while (this->dealerHand.getScore() < 17) {
 					this->dealerHand.add(this->deck.draw(), VISIBLE);
+					this->clearScreen();
+					this->display();
+					std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 				}
 
 				if (this->dealerHand.isBusted()) {

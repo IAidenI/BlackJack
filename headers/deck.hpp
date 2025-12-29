@@ -20,5 +20,4 @@ class Deck {
 		void init();
 		void shuffle();
 		Card draw();
-		void debug();
 };
