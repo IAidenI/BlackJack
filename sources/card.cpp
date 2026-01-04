@@ -1,15 +1,10 @@
 #include "card.hpp"
 
-static std::string padRight(const std::string& s, size_t w) {
-    if (s.size() >= w) return s;
-    return s + std::string(w - s.size(), ' ');
-}
-
-static std::string centerText(const std::string& t, size_t w) {
-    if (t.size() >= w) return t.substr(0, w);
-    size_t left = (w - t.size()) / 2;
-    size_t right = w - t.size() - left;
-    return std::string(left, ' ') + t + std::string(right, ' ');
+Card::Card() {
+    this->name = "Inconnue";
+    this->familly = "Inconnue";
+    this->value = -1;
+    this->visibility = false;
 }
 
 Card::Card(std::string name, std::string familly, int value) {
@@ -17,7 +12,6 @@ Card::Card(std::string name, std::string familly, int value) {
 	this->familly = familly;
 	this->value = value;
 }
-
 
 std::string Card::rankStr() const {
     if (name == "As") return "A";
@@ -62,22 +56,6 @@ void Card::display() {
 	}
 }
 
-std::vector<std::string> Card::renderHidden() const {
-	const std::string label = centerText("Cachée", 13);
-    return {
-        "╭───────────╮",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "│░░░░░░░░░░░│",
-        "╰───────────╯",
-		label
-    };
-}
-
 std::vector<std::string> Card::render() const {
     if (!visibility) return this->renderHidden();
 
@@ -101,4 +79,57 @@ std::vector<std::string> Card::render() const {
         "╰───────────╯",
 		label,
     };
+}
+
+std::vector<std::string> Card::renderHidden() const {
+	const std::string label = centerText("Cachée", 13);
+    return {
+        "╭───────────╮",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "│░░░░░░░░░░░│",
+        "╰───────────╯",
+		label
+    };
+}
+
+bool Card::operator==(const Card &other) const {
+    return this->name == other.name && this->familly == other.familly;
+}
+
+bool Card::isValid(std::string name, std::string familly) {
+    bool nameExists = Card::ranks.find(name) != Card::ranks.end();
+    bool famillyExists = std::find(Card::famillies.begin(), Card::famillies.end(), familly) != Card::famillies.end();
+    return nameExists && famillyExists;
+}
+
+Card Card::create(std::string name, std::string familly) {
+    if (Card::isValid(name, familly)) return Card(name, familly, Card::ranks.at(name));
+    else return Card();
+}
+
+std::unordered_map<std::string, int> Card::ranks = {
+	{"As", 11}, {"Deux", 2}, {"Trois", 3}, {"Quatre", 4},
+	{"Cinq", 5}, {"Six", 6}, {"Sept", 7}, {"Huit", 8},
+	{"Neuf", 9}, {"Dix", 10}, {"Valet", 10}, {"Dame", 10},
+	{"Roi", 10}
+};
+std::vector<std::string> Card::famillies = {
+	"Coeur", "Trèfle", "Carreau", "Pique"
+};
+
+std::string padRight(const std::string& s, size_t w) {
+    if (s.size() >= w) return s;
+    return s + std::string(w - s.size(), ' ');
+}
+
+std::string centerText(const std::string& t, size_t w) {
+    if (t.size() >= w) return t.substr(0, w);
+    size_t left = (w - t.size()) / 2;
+    size_t right = w - t.size() - left;
+    return std::string(left, ' ') + t + std::string(right, ' ');
 }

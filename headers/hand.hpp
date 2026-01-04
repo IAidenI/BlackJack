@@ -8,15 +8,19 @@ class Hand {
 		std::vector<Card> cards;
 		int score = 0;
 		int visibleScore = 0;
+
+		void recomputeScore();
 	public:
 		void add(const Card& card, bool visibility);
+		
 		int getScore() { return this->score; }
 		int getVisibleScore() { return this->visibleScore; }
+		Card& getCurrentCard() { return this->cards.back(); }
 
 		bool isBusted();
 		bool isBlackjack();
 
-		Card& getCurrentCard();
-		void recomputeScore();
 		void display();
 };
+
+void printCardsRow(const std::vector<std::vector<std::string>>& sprites);

@@ -8,20 +8,9 @@ Deck::Deck() : rng(std::random_device{}()) {
 void Deck::init() {
 	this->cards.clear();
 
-    std::vector<Rank> ranks = {
-        {"As", 11}, {"Deux", 2}, {"Trois", 3}, {"Quatre", 4},
-        {"Cinq", 5}, {"Six", 6}, {"Sept", 7}, {"Huit", 8},
-        {"Neuf", 9}, {"Dix", 10}, {"Valet", 10}, {"Dame", 10},
-        {"Roi", 10}
-    };
-
-    std::vector<std::string> cardFamillies = {
-        "Coeur", "Trèfle", "Carreau", "Pique"
-    };
-
-    for (std::string familly: cardFamillies) {
-        for (Rank rank: ranks) {
-            this->cards.emplace_back(rank.name, familly, rank.value);
+    for (const auto& [name, value]: Card::ranks) {
+        for (const auto& familly: Card::famillies) {
+            this->cards.emplace_back(name, familly, value);
         }
     }
 }

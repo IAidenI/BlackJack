@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <thread>
+#include <iostream>
+#include <limits>
 #include "deck.hpp"
 #include "hand.hpp"
 
@@ -32,12 +34,14 @@ class Game {
 
 		GameStatus gameStatus = GameStatus::INIT;
 		PlayerStatus playerStatus = PlayerStatus::PLAYING;
+
+		void clearScreen();
+		void display();
+		void checkImediate();
 	public:
 		Game();
 
 		GameStatus getStatus() const { return this->gameStatus; }
-		void checkImediate();
-		void display();
-		void clearScreen();
+		
 		void start();
 };
