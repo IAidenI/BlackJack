@@ -3,13 +3,15 @@ CC         = g++
 TARGET     = blackjack
 SOURCEDIR  = sources
 HEADERSDIR = headers
+THIRDPARTY = third_party/bcrypt
+BCRYPT_INC = -I$(THIRDPARTY)/include -I$(THIRDPARTY)/src
 
 # compile faisait: g++ -std=c++17 blackjack.cpp sources/*.cpp -Iheaders -o blackjack
-SOURCES := blackjack.cpp $(wildcard $(SOURCEDIR)/*.cpp)
+SOURCES := blackjack.cpp $(wildcard $(SOURCEDIR)/*.cpp) $(wildcard $(THIRDPARTY)/src/*.c) $(wildcard $(THIRDPARTY)/src/*.cpp)
 OBJECTS := $(SOURCES:.cpp=.o)
 .INTERMEDIATE: $(OBJECTS)
 
-CFLAGS  = -Wall -g -std=c++17 -I$(HEADERSDIR)
+CFLAGS  = -Wall -g -std=c++17 -I$(HEADERSDIR) $(BCRYPT_INC)
 LDFLAGS =
 LDLIBS  =
 

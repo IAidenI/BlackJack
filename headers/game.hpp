@@ -15,6 +15,7 @@ enum class GameStatus {
 	PLAYER_TURN,
 	DEALER_TURN,
 	PLAYER_WIN,
+	PLAYER_WIN_WITH_BJ,
 	DEALER_WIN,
 	PUSH
 };
@@ -35,13 +36,15 @@ class Game {
 		GameStatus gameStatus = GameStatus::INIT;
 		PlayerStatus playerStatus = PlayerStatus::PLAYING;
 
-		void clearScreen();
 		void display();
 		void checkImediate();
 	public:
 		Game();
+		void init();
 
 		GameStatus getStatus() const { return this->gameStatus; }
 		
+		void clearScreen();
 		void start();
+		void clear();
 };

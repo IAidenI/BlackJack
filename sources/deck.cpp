@@ -15,6 +15,10 @@ void Deck::init() {
     }
 }
 
+void Deck::clear() {
+    this->cards.clear();
+}
+
 void Deck::shuffle() {
 	std::shuffle(this->cards.begin(), this->cards.end(), this->rng);
 }

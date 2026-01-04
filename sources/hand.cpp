@@ -18,6 +18,12 @@ void Hand::add(const Card& card, bool visibility) {
 	if (visibility) this->visibleScore += card.getValue();
 };
 
+void Hand::clear() {
+    this->cards.clear();
+    this->score = 0;
+    this->visibleScore = 0;
+}
+
 bool Hand::isBusted() {
 	return this->score > 21;
 }

@@ -13,6 +13,7 @@ class Deck {
 		Deck();
 
 		void init();
+		void clear();
 		void shuffle();
 		Card draw();
 };

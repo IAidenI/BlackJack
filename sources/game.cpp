@@ -1,6 +1,8 @@
 #include "game.hpp"
 
- Game::Game() : deck() {
+Game::Game() : deck() {}
+
+void Game::init() {
 	this->playerHand.add(this->deck.draw(), VISIBLE);
 	this->playerHand.add(this->deck.draw(), VISIBLE);
 
@@ -15,7 +17,7 @@ void Game::checkImediate() {
 	bool dBJ = this->dealerHand.isBlackjack();
 
 	if (pBJ && dBJ) this->gameStatus = GameStatus::PUSH;
-	else if (pBJ) this->gameStatus = GameStatus::PLAYER_WIN;
+	else if (pBJ) this->gameStatus = GameStatus::PLAYER_WIN_WITH_BJ;
 	else if (dBJ) this->gameStatus = GameStatus::DEALER_WIN;
 }
 
@@ -41,6 +43,7 @@ void Game::start() {
 				std::cout << "Le jeu commence !" << std::endl;
 				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 				this->gameStatus = GameStatus::PLAYER_TURN;
+				this->init();
 				break;
 			}
 			case GameStatus::PLAYER_TURN: {
@@ -62,7 +65,7 @@ void Game::start() {
 							this->gameStatus = GameStatus::DEALER_WIN;
 						} else if (this->playerHand.isBlackjack()) {
 							this->playerStatus = PlayerStatus::BLACKJACK;
-							this->gameStatus = GameStatus::PLAYER_WIN;
+							this->gameStatus = GameStatus::PLAYER_WIN_WITH_BJ;
 						}
 					} else if (choice == 'n') {
 						this->playerStatus = PlayerStatus::STAND;
@@ -112,4 +115,16 @@ void Game::start() {
 				return;
 		}
 	}
+}
+
+void Game::clear() {
+	this->playerHand.clear();
+	this->dealerHand.clear();
+	
+	this->gameStatus = GameStatus::INIT;
+	this->playerStatus = PlayerStatus::PLAYING;
+
+	this->deck.clear();
+	this->deck.init();
+	this->deck.shuffle();
 }

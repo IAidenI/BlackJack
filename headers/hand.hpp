@@ -12,6 +12,7 @@ class Hand {
 		void recomputeScore();
 	public:
 		void add(const Card& card, bool visibility);
+		void clear();
 		
 		int getScore() { return this->score; }
 		int getVisibleScore() { return this->visibleScore; }
