@@ -15,7 +15,7 @@ AccountStatus Account::create(std::string username, std::string password) {
     std::string hash = bcrypt::generateHash(password);
     file << PATTERN_USERNAME << username << "\n";
     file << PATTERN_PASSWORD << hash << "\n";
-    file << PATTERN_BALANCE  << std::to_string(DEFAULT_BALANCE) << "\n";
+    file << PATTERN_TOKENS  << std::to_string(DEFAULT_TOKENS) << "\n";
     file.close();
 
     return AccountStatus::CREATED;
@@ -39,7 +39,7 @@ bool Account::loadAccountFile(std::string path, std::string& username, std::stri
     while (std::getline(file, line)) {
         if (line.rfind(PATTERN_USERNAME, 0) == 0) username = line.substr(std::string(PATTERN_USERNAME).size());
         else if (line.rfind(PATTERN_PASSWORD, 0) == 0) hash = line.substr(std::string(PATTERN_PASSWORD).size());
-        else if (line.rfind(PATTERN_BALANCE, 0) == 0) balance = std::stoi(line.substr(std::string(PATTERN_BALANCE).size()));
+        else if (line.rfind(PATTERN_TOKENS, 0) == 0) balance = std::stoi(line.substr(std::string(PATTERN_TOKENS).size()));
     }
     return !username.empty() && !hash.empty() && balance != 0;
 }
@@ -58,7 +58,7 @@ AccountStatus Account::login(std::string username, std::string password) {
         this->username = usernameFound;
         this->fileUsername = username;
         this->hashPassword = hashFound;
-        this->balance = balanceFound;
+        this->tokens = balanceFound;
         this->logged = true;
         return AccountStatus::LOGGED;
     }
@@ -67,19 +67,19 @@ AccountStatus Account::login(std::string username, std::string password) {
 
 void Account::logout() {
     this->username = "";
-    this->balance = 0;
+    this->tokens = 0;
     this->logged = false;
 }
 
 bool Account::canBet(int amount) {
-    return this->balance >= amount;
+    return this->tokens >= amount;
 }
 
 void Account::applyResult(int bet, Result result) {
     switch (result) {
-        case Result::BLACKJACK: balance += static_cast<int>(bet * 1.5f); break;
-        case Result::WIN:       balance += bet;                          break;
-        case Result::LOSE:      balance -= bet;                          break;
+        case Result::BLACKJACK: tokens += static_cast<int>(bet * 1.5f); break;
+        case Result::WIN:       tokens += bet;                          break;
+        case Result::LOSE:      tokens -= bet;                          break;
         case Result::PUSH:
         default: break;
     }
@@ -107,7 +107,7 @@ AccountStatus Account::save() {
 
     file << PATTERN_USERNAME << this->username << "\n";
     file << PATTERN_PASSWORD << this->hashPassword << "\n";
-    file << PATTERN_BALANCE  << this->balance << "\n";
+    file << PATTERN_TOKENS  << this->tokens << "\n";
     file.close();
 
     return AccountStatus::SAVED;

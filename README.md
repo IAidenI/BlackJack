@@ -43,11 +43,11 @@ make && ./blackjack
 - `Makefile` : règles de build principales
 
 ## TODO
-- Masquer la saisie du mot de passe pour que le mot de passe ne s'affiche pas à l'écran lors de la connexion/création d'un compte.
 - Chiffrer les fichiers du dossier `accounts/` : actuellement les comptes sont sauvegardés en clair (facilement lisibles et modifiables).
-- Une version avec interface graphique (raylib ou gtk)
+- Ajouter un système de prêt à la banque à rembourser si on tombe à 0
+
 - Crée un script d'installation pour :
   - crée les dossiers nécessaires avec les permissions correctes,
   - propose la création d'un premier utilisateur administrateur,
   - applique les bonnes pratiques d'emplacement plutôt que d'utiliser le répertoire du dépôt.*
-
+- Une version avec interface graphique (raylib ou gtk)

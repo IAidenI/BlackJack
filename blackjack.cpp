@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include "account.hpp"
+#include "utils.hpp"
 
 int main() {
 	Game game;
@@ -8,25 +9,25 @@ int main() {
 	std::string errorMsg = "";
 	std::string succesMsg = "";
 
-	game.clearScreen();
+	clearScreen();
 
 	while (true) {
 		if (!errorMsg.empty()) {
-			game.clearScreen();
+			clearScreen();
 			std::cout << "[ ERROR ] " << errorMsg << "\n\n";
 			errorMsg.clear();
 		}
 
 		if (!succesMsg.empty()) {
-			game.clearScreen();
+			clearScreen();
 			std::cout << "[ SUCCES ] " << succesMsg << "\n\n";
 			succesMsg.clear();
 		}
 
 		if (user.isConnected()) {
 			std::cout << "[ STATUS ] - Connecté\n";
-			std::cout << "[  INFOS ] nom : " << user.getUsername() << "\n";
-			std::cout << "           argent : " << user.getBalance() << "\n\n";
+			std::cout << "[  INFOS ] nom    : " << user.getUsername() << "\n";
+			std::cout << "           jetons : " << user.getTokens() << "\n\n";
 			std::cout << "[1] - Changer le nom d'utilisateur\n";
 			std::cout << "[2] - Changer le mot de passe\n";
 			std::cout << "[3] - Se déconnecter\n";
@@ -50,18 +51,15 @@ int main() {
 				else succesMsg = "Nom d'utilisateur mis à jour";
 			}
 			else if (choice == "2") {
-				std::cout << "Saisissez votre ancien mot de passe : ";
-				std::string oldPassword;
-				std::cin >> oldPassword;
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				std::string oldPassword = ReadPassword("Saisissez votre ancien mot de passe : ");
 
 				if (!user.isPasswordCorrect(oldPassword)) {
 					errorMsg = "Mot de passe incorrect";
 					continue;
 				}
 
-				std::cout << "Saisissez le nouveau mot de passe : ";
-				std::string newPassword;
-				std::cin >> newPassword;
+				std::string newPassword = ReadPassword("Saisissez le nouveau mot de passe : ");
 
 				user.changePassword(newPassword);
 				AccountStatus ret = user.save();
@@ -72,7 +70,7 @@ int main() {
 			}
 			else if (choice == "3") {
 				user.logout();
-				game.clearScreen();
+				clearScreen();
 			}
 			else if (choice == "4") {
 				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -98,6 +96,7 @@ int main() {
 			}
 			else if (choice == "5") {
 				int bet = 0;
+				bool cancel = false;
 				while (true) {
 					std::cout << "Entrez votre mise : ";
 					std::string input;
@@ -124,12 +123,14 @@ int main() {
 					}
 
 					if (!user.canBet(bet)) {
-						std::cout << "Solde insuffisant.\n";
-						continue;
+						errorMsg = "Solde insuffisant.";
+						cancel = true;
+						break;
 					}
 
 					break;
 				}
+				if (cancel) continue;
 
 				std::cout << "Vous misez : " << bet << "\n";
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -168,15 +169,20 @@ int main() {
 					}
 				}
 
-
 				std::cout << "\nAppuyez sur Entrée pour revenir au menu...";
 				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				std::cin.get();
 				game.clear();
 				
-				if (gain > 0) succesMsg = "Vous avez gagné : " + std::to_string(gain);
-				else if (gain < 0) succesMsg = "Vous avez perdu : " + std::to_string(-gain);
-				else succesMsg = "Aucun gain";
+				AccountStatus ret = user.save();
+				if (ret == AccountStatus::ERROR) errorMsg = "Une erreur est survenu";
+				else if (ret == AccountStatus::NOT_EXISTS) errorMsg = "L'utilisateur n'existe pas";
+				else if (ret == AccountStatus::EXISTS) errorMsg = "Ce nom est déjà utilisé";
+				else {
+					if (gain > 0) succesMsg = "Vous avez gagné : " + std::to_string(gain);
+					else if (gain < 0) succesMsg = "Vous avez perdu : " + std::to_string(-gain);
+					else succesMsg = "Aucun gain";
+				}
 			}
 			else if (choice == "6") return 0;
 			else errorMsg = "[!] Option inconnu";
@@ -194,9 +200,8 @@ int main() {
 				std::string username = "";
 				std::cin >> username;
 
-				std::cout << "Saisissez un mot de passe : ";
-				std::string password = "";
-				std::cin >> password;
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				std::string password = ReadPassword("Saisissez un mot de passe : ");
 
 				AccountStatus ret = user.create(username, password);
 				if (ret == AccountStatus::ERROR) errorMsg = "Une erreur est survenu";
@@ -207,14 +212,13 @@ int main() {
 				std::string username = "";
 				std::cin >> username;
 
-				std::cout << "Saisissez votre mot de passe : ";
-				std::string password = "";
-				std::cin >> password;
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				std::string password = ReadPassword("Saisissez votre mot de passe : ");
 
 				AccountStatus ret = user.login(username, password);
 				if (ret == AccountStatus::ERROR) errorMsg = "Nom d'utilisateur ou mot de passe incorrect";
 				else if (ret == AccountStatus::NOT_EXISTS) errorMsg = "L'utilisateur n'existe pas";
-				else game.clearScreen();
+				else clearScreen();
 			} else if (choice == "3") return 0;
 			else errorMsg = "[!] Option inconnu";
 		}

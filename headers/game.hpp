@@ -6,6 +6,7 @@
 #include <limits>
 #include "deck.hpp"
 #include "hand.hpp"
+#include "utils.hpp"
 
 #define VISIBLE true
 #define HIDDEN false
@@ -44,7 +45,6 @@ class Game {
 
 		GameStatus getStatus() const { return this->gameStatus; }
 		
-		void clearScreen();
 		void start();
 		void clear();
 };

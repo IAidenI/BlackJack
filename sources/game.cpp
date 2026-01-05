@@ -30,13 +30,9 @@ void Game::display() {
 	this->playerHand.display();
 }
 
-void Game::clearScreen() {
-	std::cout << "\033[2J\033[H";
-}
-
 void Game::start() {
 	while (true) {
-		this->clearScreen();
+		clearScreen();
 
 		switch(this->gameStatus) {
 			case GameStatus::INIT: {
@@ -57,7 +53,7 @@ void Game::start() {
 
 					if (choice == 'y') {
 						this->playerHand.add(this->deck.draw(), VISIBLE);
-						this->clearScreen();
+						clearScreen();
 						this->display();
 
 						if (this->playerHand.isBusted()) {
@@ -71,7 +67,7 @@ void Game::start() {
 						this->playerStatus = PlayerStatus::STAND;
 						this->gameStatus = GameStatus::DEALER_TURN;
 					} else {
-						this->clearScreen();
+						clearScreen();
 						this->display();
 						std::cout << "Choix invalide. Veuillez réessayer." << std::endl;
 					}
@@ -82,13 +78,13 @@ void Game::start() {
 				this->display();
 
 				this->dealerHand.getCurrentCard().setVisibility(VISIBLE);
-				this->clearScreen();
+				clearScreen();
 				this->display();
 				std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 
 				while (this->dealerHand.getScore() < 17) {
 					this->dealerHand.add(this->deck.draw(), VISIBLE);
-					this->clearScreen();
+					clearScreen();
 					this->display();
 					std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 				}
@@ -107,7 +103,7 @@ void Game::start() {
 			case GameStatus::PLAYER_WIN:
 			case GameStatus::DEALER_WIN:
 			case GameStatus::PUSH: {
-				this->clearScreen();
+				clearScreen();
 				this->display();
 				return;
 			}

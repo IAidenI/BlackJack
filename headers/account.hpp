@@ -8,8 +8,8 @@
 
 #define PATTERN_USERNAME "username:"
 #define PATTERN_PASSWORD "password:"
-#define PATTERN_BALANCE  "balance:"
-#define DEFAULT_BALANCE  1000
+#define PATTERN_TOKENS   "tokens:"
+#define DEFAULT_TOKENS   1000
 
 enum class AccountStatus {
     CREATED,
@@ -34,18 +34,18 @@ class Account {
         std::string username = "";
         std::string fileUsername = "";
         std::string hashPassword = "";
-        int balance = 0;
+        int tokens = 0;
         bool logged = false;
 
         std::string accountDir = "accounts";
         
-        bool loadAccountFile(std::string path, std::string& username, std::string& hash, int& balance);
+        bool loadAccountFile(std::string path, std::string& username, std::string& hash, int& tokens);
         void encrpyt(std::string path);
     public:
         Account();
 
         std::string getUsername() { return this->username; }
-        int getBalance() { return this->balance; }
+        int getTokens() { return this->tokens; }
         bool isConnected() { return this->logged; }
 
         void changeUsername(std::string newUsername) { this->username = newUsername; }
