@@ -44,8 +44,6 @@ make && ./blackjack
 
 ## TODO
 - Chiffrer les fichiers du dossier `accounts/` : actuellement les comptes sont sauvegardés en clair (facilement lisibles et modifiables).
-- Ajouter un système de prêt à la banque à rembourser si on tombe à 0
-
 - Crée un script d'installation pour :
   - crée les dossiers nécessaires avec les permissions correctes,
   - propose la création d'un premier utilisateur administrateur,

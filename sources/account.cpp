@@ -13,9 +13,12 @@ AccountStatus Account::create(std::string username, std::string password) {
     if (!file) return AccountStatus::ERROR;
 
     std::string hash = bcrypt::generateHash(password);
-    file << PATTERN_USERNAME << username << "\n";
-    file << PATTERN_PASSWORD << hash << "\n";
-    file << PATTERN_TOKENS  << std::to_string(DEFAULT_TOKENS) << "\n";
+    file << PATTERN_USERNAME       << username                       << "\n";
+    file << PATTERN_PASSWORD       << hash                           << "\n";
+    file << PATTERN_TOKENS         << std::to_string(DEFAULT_TOKENS) << "\n";
+    file << PATTERN_LOAN_ACTIVE    << "0\n";
+    file << PATTERN_LOAN_TYPE      << "SMALL\n";
+    file << PATTERN_LOAN_REMAINING << "0\n";
     file.close();
 
     return AccountStatus::CREATED;
@@ -31,17 +34,48 @@ AccountStatus Account::remove() {
     else return AccountStatus::NOT_EXISTS;
 }
 
-bool Account::loadAccountFile(std::string path, std::string& username, std::string& hash, int& balance) {
+bool Account::loadAccountFile(std::string path, std::string& username, std::string& hash, int& tokens, ActiveLoan& loan) {
     std::ifstream file(path);
     if (!file) return false;
 
+    bool hasUser = false, hasHash = false, hasTokens = false;
+    bool hasLoanActive = false, hasLoanType = false, hasLoanRemaining = false;
+
     std::string line;
     while (std::getline(file, line)) {
-        if (line.rfind(PATTERN_USERNAME, 0) == 0) username = line.substr(std::string(PATTERN_USERNAME).size());
-        else if (line.rfind(PATTERN_PASSWORD, 0) == 0) hash = line.substr(std::string(PATTERN_PASSWORD).size());
-        else if (line.rfind(PATTERN_TOKENS, 0) == 0) balance = std::stoi(line.substr(std::string(PATTERN_TOKENS).size()));
+        if (line.rfind(PATTERN_USERNAME, 0) == 0) {
+            username = line.substr(std::string(PATTERN_USERNAME).size());
+            hasUser = !username.empty();
+        }
+        else if (line.rfind(PATTERN_PASSWORD, 0) == 0) {
+            hash = line.substr(std::string(PATTERN_PASSWORD).size());
+            hasHash = !hash.empty();
+        }
+        else if (line.rfind(PATTERN_TOKENS, 0) == 0) {
+            tokens = std::stoi(line.substr(std::string(PATTERN_TOKENS).size()));
+            hasTokens = true;
+        }
+        else if (line.rfind(PATTERN_LOAN_ACTIVE, 0) == 0) {
+            loan.active = std::stoi(line.substr(std::string(PATTERN_LOAN_ACTIVE).size())) != 0;
+            hasLoanActive = true;
+        }
+        else if (line.rfind(PATTERN_LOAN_TYPE, 0) == 0) {
+            loan.type = loanTypeFromString(line.substr(std::string(PATTERN_LOAN_TYPE).size()));
+            hasLoanType = true;
+        }
+        else if (line.rfind(PATTERN_LOAN_REMAINING, 0) == 0) {
+            loan.remaining = std::stoi(line.substr(std::string(PATTERN_LOAN_REMAINING).size()));
+            hasLoanRemaining = true;
+        }
     }
-    return !username.empty() && !hash.empty() && balance != 0;
+    
+    if (!(hasLoanActive && hasLoanType && hasLoanRemaining)) {
+        loan.active = false;
+        loan.type = LoanType::SMALL;
+        loan.remaining = 0;
+    }
+    
+    return hasUser && hasHash && hasTokens;
 }
 
 AccountStatus Account::login(std::string username, std::string password) {
@@ -51,14 +85,16 @@ AccountStatus Account::login(std::string username, std::string password) {
 
     std::string usernameFound = "";
     std::string hashFound = "";
-    int balanceFound = 0;
-    if (!this->loadAccountFile(filePath, usernameFound, hashFound, balanceFound)) return AccountStatus::NOT_EXISTS;
+    int tokensFound = 0;
+    ActiveLoan loanFound;
+    if (!this->loadAccountFile(filePath, usernameFound, hashFound, tokensFound, loanFound)) return AccountStatus::NOT_EXISTS;
 
     if (usernameFound == username && bcrypt::validatePassword(password, hashFound)) {
         this->username = usernameFound;
         this->fileUsername = username;
         this->hashPassword = hashFound;
-        this->tokens = balanceFound;
+        this->tokens = tokensFound;
+        this->loan = loanFound;
         this->logged = true;
         return AccountStatus::LOGGED;
     }
@@ -73,16 +109,6 @@ void Account::logout() {
 
 bool Account::canBet(int amount) {
     return this->tokens >= amount;
-}
-
-void Account::applyResult(int bet, Result result) {
-    switch (result) {
-        case Result::BLACKJACK: tokens += static_cast<int>(bet * 1.5f); break;
-        case Result::WIN:       tokens += bet;                          break;
-        case Result::LOSE:      tokens -= bet;                          break;
-        case Result::PUSH:
-        default: break;
-    }
 }
 
 AccountStatus Account::save() {
@@ -105,9 +131,12 @@ AccountStatus Account::save() {
     std::ofstream file(newPath);
     if (!file) return AccountStatus::ERROR;
 
-    file << PATTERN_USERNAME << this->username << "\n";
-    file << PATTERN_PASSWORD << this->hashPassword << "\n";
-    file << PATTERN_TOKENS  << this->tokens << "\n";
+    file << PATTERN_USERNAME       << this->username                    << "\n";
+    file << PATTERN_PASSWORD       << this->hashPassword                << "\n";
+    file << PATTERN_TOKENS         << this->tokens                      << "\n";
+    file << PATTERN_LOAN_ACTIVE    << (this->loan.active ? "1" : "0")   << "\n";
+    file << PATTERN_LOAN_TYPE      << loanTypeToString(this->loan.type) << "\n";
+    file << PATTERN_LOAN_REMAINING << this->loan.remaining              << "\n";
     file.close();
 
     return AccountStatus::SAVED;

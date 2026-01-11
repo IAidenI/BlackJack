@@ -1,9 +1,11 @@
 #include "game.hpp"
 #include "account.hpp"
+#include "bank.hpp"
 #include "utils.hpp"
 
 int main() {
 	Game game;
+	Bank bank;
 	Account user;
 	std::string choice = "";
 	std::string errorMsg = "";
@@ -27,13 +29,19 @@ int main() {
 		if (user.isConnected()) {
 			std::cout << "[ STATUS ] - Connecté\n";
 			std::cout << "[  INFOS ] nom    : " << user.getUsername() << "\n";
-			std::cout << "           jetons : " << user.getTokens() << "\n\n";
+			std::cout << "           jetons : " << user.getTokens() << "\n";
+			if (user.hasActiveLoan()) {
+				auto& loan = user.getLoan();
+				std::cout << "[  LOAN  ] type       : " << loanTypeToString(loan.type) << "\n";
+				std::cout << "           à payer    : " << loan.remaining << "\n\n";
+			}
 			std::cout << "[1] - Changer le nom d'utilisateur\n";
 			std::cout << "[2] - Changer le mot de passe\n";
 			std::cout << "[3] - Se déconnecter\n";
 			std::cout << "[4] - Supprimer le compte\n";
-			std::cout << "[5] - Jouer\n";
-			std::cout << "[6] - Exit\n";
+			std::cout << "[5] - Faire un prêt\n";
+			std::cout << "[6] - Jouer\n";
+			std::cout << "[7] - Exit\n";
 			std::cout << "[ choix ] : ";
 			std::cin >> choice;
 
@@ -93,8 +101,71 @@ int main() {
 				if (ret == AccountStatus::NOT_LOGGED) errorMsg = "Vous n'êtes pas connecté";
 				else if (ret == AccountStatus::NOT_EXISTS) errorMsg = "L'utilisateur n'existe pas";
 				else succesMsg = "Compte supprimé";
+			} else if (choice == "5") {
+				if (user.hasActiveLoan()) {
+					errorMsg = "Vous avez déjà un prêt actif";
+					continue;
+				}
+
+				auto offers = bank.getLoanOffers();
+				std::cout << "Offres de prêt disponibles :\n";
+
+				for (size_t i = 0; i < offers.size(); ++i) {
+					auto& offer = offers[i];
+					std::cout << "[" << (i + 1) << "] - Montant        : " << offer.amount << " jetons\n";
+					std::cout << "      Taux d'intérêt : " << static_cast<int>(offer.interestRate * 100) << "%\n";
+					std::cout << "      Minimum requis : " << offer.minTokensRequired << " jetons\n\n";
+				}
+
+				int selected = -1;
+				while (true) {
+					std::cout << "Choisissez une offre de prêt (1-" << offers.size() << ") ou 0 pour annuler : ";
+					std::string input;
+					std::cin >> input;
+
+					bool valid = !input.empty();
+					for (char c : input) {
+						if (!std::isdigit(static_cast<unsigned char>(c))) {
+							valid = false;
+							break;
+						}
+					}
+
+					if (!valid) {
+						std::cout << "Veuillez entrer un nombre valide.\n";
+						continue;
+					}
+
+					int value = std::stoi(input);
+					if (value == 0) break;
+					if (value < 1 || value > static_cast<int>(offers.size())) {
+						std::cout << "Choix invalide. Veuillez réessayer.\n";
+						continue;
+					}
+
+					selected = value - 1;
+					break;
+				}
+
+				if (selected == -1) {
+					clearScreen();
+					continue;
+				}
+				LoanType selectedType = offers[selected].type;
+
+				if (!bank.requestLoan(user, selectedType)) errorMsg = "Impossible de contracter ce prêt";
+				else {
+					AccountStatus ret = user.save();
+					if (ret == AccountStatus::ERROR) {
+						user.getLoan().active = false;
+						user.getLoan().remaining = 0;
+						errorMsg = "Une erreur est survenue lors de la sauvegarde";
+					} else {
+						succesMsg = "Prêt accordé";
+					}
+				}
 			}
-			else if (choice == "5") {
+			else if (choice == "6") {
 				int bet = 0;
 				bool cancel = false;
 				while (true) {
@@ -132,41 +203,51 @@ int main() {
 				}
 				if (cancel) continue;
 
+				user.addTokens(-bet);
 				std::cout << "Vous misez : " << bet << "\n";
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 				game.start();
 
-				int gain = 0;
+				int profit = 0;
+				Result result = Result::LOSE;
+
 				switch (game.getStatus()) {
-					case GameStatus::PLAYER_WIN_WITH_BJ: {
-						std::cout << "Vous avez gagné !\n\n";
-						gain = static_cast<int>(bet * 1.5f);
-						user.applyResult(bet, Result::BLACKJACK);
+					case GameStatus::PLAYER_WIN_WITH_BJ:
+						profit = static_cast<int>(bet * 1.5f);
+						result = Result::BLACKJACK;
+						std::cout << "Vous avez gagné " << profit << " tokens !\n\n";
 						break;
-					}
-					case GameStatus::PLAYER_WIN: {
-						std::cout << "Vous avez gagné !\n\n";
-        				gain = bet;
-						user.applyResult(bet, Result::WIN);
+
+					case GameStatus::PLAYER_WIN:
+						profit = bet;
+						result = Result::WIN;
+						std::cout << "Vous avez gagné " << profit << " tokens !\n\n";
 						break;
-					}
-					case GameStatus::DEALER_WIN: {
+
+					case GameStatus::DEALER_WIN:
+						result = Result::LOSE;
 						std::cout << "Le croupier a gagné !\n\n";
-						gain = -bet;
-						user.applyResult(bet, Result::LOSE);
 						break;
-					}
-					case GameStatus::PUSH: {
+
+					case GameStatus::PUSH:
+						result = Result::PUSH;
 						std::cout << "Égalité !\n\n";
-						gain = 0;
-						user.applyResult(bet, Result::PUSH);
 						break;
-					}
-					default: {
+
+					default:
 						std::cout << "Le jeu s'est terminé de manière inattendue.\n\n";
 						break;
-					}
+				}
+
+				if (profit > 0 && bank.repay(user, profit)) {
+					std::cout << "Un remboursement de votre prêt a été effectué, vous gagnez " << profit << " tokens.\n";
+				}
+
+				if (result == Result::WIN || result == Result::BLACKJACK) {
+					user.addTokens(bet + profit);
+				} else if (result == Result::PUSH) {
+					user.addTokens(bet);
 				}
 
 				std::cout << "\nAppuyez sur Entrée pour revenir au menu...";
@@ -179,15 +260,14 @@ int main() {
 				else if (ret == AccountStatus::NOT_EXISTS) errorMsg = "L'utilisateur n'existe pas";
 				else if (ret == AccountStatus::EXISTS) errorMsg = "Ce nom est déjà utilisé";
 				else {
-					if (gain > 0) succesMsg = "Vous avez gagné : " + std::to_string(gain);
-					else if (gain < 0) succesMsg = "Vous avez perdu : " + std::to_string(-gain);
-					else succesMsg = "Aucun gain";
+					if (result == Result::LOSE) succesMsg = "Vous avez perdu : " + std::to_string(bet);
+					else if (result == Result::PUSH) succesMsg = "Égalité";
+					else succesMsg = "Vous avez gagné : " + std::to_string(profit);
 				}
 			}
-			else if (choice == "6") return 0;
+			else if (choice == "7") return 0;
 			else errorMsg = "[!] Option inconnu";
-		}
-		else {
+		} else {
 			std::cout << "[ STATUS ] - Déconnecté\n";
 			std::cout << "[1] - Crée un compte\n";
 			std::cout << "[2] - Se connecter\n";
