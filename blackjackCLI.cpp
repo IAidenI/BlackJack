@@ -207,7 +207,55 @@ int main() {
 				std::cout << "Vous misez : " << bet << "\n";
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-				game.start();
+				game.newRound();
+
+				clearScreen();
+				std::cout << "Le jeu commence !" << std::endl;
+				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+				auto render = [&]() {
+					clearScreen();
+					std::cout << "=== Croupier ===\n";
+					game.getDealerHand().display();
+					std::cout << "\n=== Joueur ===\n";
+					game.getPlayerHand().display();
+				};
+
+				if (game.isRoundOver()) {
+					game.getDealerHand().getCurrentCard().setVisibility(VISIBLE);
+					render();
+					std::this_thread::sleep_for(std::chrono::milliseconds(900));
+				} else {
+					do {
+						render();
+
+						if (game.getStatus() == GameStatus::PLAYER_TURN) {
+							std::cout << "\n[1] - Tirer une carte\n";
+							std::cout << "[2] - Rester\n";
+							std::cout << "[ choix ] : ";
+
+							std::string action;
+							std::cin >> action;
+
+							if (action == "1") {
+								game.playerHit();
+								render();
+							}
+							else if (action == "2") {
+								game.playerStand();
+								render();
+							}
+						}
+
+						while ((game.getStatus() == GameStatus::DEALER_REVEAL || game.getStatus() == GameStatus::DEALER_TURN) && !game.isRoundOver()) {
+							game.dealerStep();
+							
+							render();
+							std::this_thread::sleep_for(std::chrono::milliseconds(900));
+						}
+
+					} while (!game.isRoundOver());
+				}
 
 				int profit = 0;
 				Result result = Result::LOSE;
@@ -227,12 +275,14 @@ int main() {
 
 					case GameStatus::DEALER_WIN:
 						result = Result::LOSE;
-						std::cout << "Le croupier a gagné !\n\n";
+						std::cout << "Le croupier a gagné !\n";
+						std::cout << "Vous avez perdu " << bet << " tokens.\n\n";
 						break;
 
 					case GameStatus::PUSH:
 						result = Result::PUSH;
-						std::cout << "Égalité !\n\n";
+						std::cout << "Égalité !\n";
+						std::cout << "Votre mise de " << bet << " tokens vous a été rendue.\n\n";
 						break;
 
 					default:
@@ -250,11 +300,6 @@ int main() {
 					user.addTokens(bet);
 				}
 
-				std::cout << "\nAppuyez sur Entrée pour revenir au menu...";
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				std::cin.get();
-				game.clear();
-				
 				AccountStatus ret = user.save();
 				if (ret == AccountStatus::ERROR) errorMsg = "Une erreur est survenu";
 				else if (ret == AccountStatus::NOT_EXISTS) errorMsg = "L'utilisateur n'existe pas";
@@ -264,6 +309,11 @@ int main() {
 					else if (result == Result::PUSH) succesMsg = "Égalité";
 					else succesMsg = "Vous avez gagné : " + std::to_string(profit);
 				}
+
+				std::cout << "\nAppuyez sur Entrée pour revenir au menu...";
+				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				std::cin.get();
+				game.clear();
 			}
 			else if (choice == "7") return 0;
 			else errorMsg = "[!] Option inconnu";

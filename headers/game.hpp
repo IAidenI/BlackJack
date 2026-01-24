@@ -15,6 +15,7 @@ enum class GameStatus {
 	INIT,
 	PLAYER_TURN,
 	DEALER_TURN,
+	DEALER_REVEAL,
 	PLAYER_WIN,
 	PLAYER_WIN_WITH_BJ,
 	DEALER_WIN,
@@ -37,14 +38,21 @@ class Game {
 		GameStatus gameStatus = GameStatus::INIT;
 		PlayerStatus playerStatus = PlayerStatus::PLAYING;
 
-		void display();
 		void checkImediate();
 	public:
 		Game();
-		void init();
 
-		GameStatus getStatus() const { return this->gameStatus; }
-		
-		void start();
 		void clear();
+		void newRound();
+
+		void playerHit();
+		void playerStand();
+
+		void dealerStep();
+
+		bool isRoundOver();
+		GameStatus getStatus() const { return this->gameStatus; }
+
+		Hand& getPlayerHand() { return this->playerHand; }
+		Hand& getDealerHand() { return this->dealerHand; }
 };

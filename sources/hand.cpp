@@ -4,18 +4,7 @@ void Hand::add(const Card& card, bool visibility) {
 	this->cards.push_back(card);
 	this->cards.back().setVisibility(visibility);
 
-    this->score += card.getValue();
-    int aces = 0;
-    for (const auto& card: cards) {
-        if (card.getName() == "As") aces++;
-    }
-
-    while (this->score > 21 && aces > 0) {
-        this->score -= 10;
-        aces--;
-    }
-
-	if (visibility) this->visibleScore += card.getValue();
+    this->recomputeScore();
 };
 
 void Hand::clear() {
@@ -33,13 +22,36 @@ bool Hand::isBlackjack() {
 }
 
 void Hand::recomputeScore() {
-    this->score = 0;
-    this->visibleScore = 0;
+    int total = 0;
+    int visibleTotal = 0;
+
+    int aces = 0;
+    int visibleAces = 0;
 
     for (const Card& card : cards) {
-        this->score += card.getValue();
-        if (card.getVisibility()) this->visibleScore += card.getValue();
+        int value = card.getValue();
+        total += value;
+
+        if (card.getName() == "As") aces++;
+
+        if (card.getVisibility()) {
+            visibleTotal += value;
+            if (card.getName() == "As") visibleAces++;
+        }
     }
+
+    while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
+    }
+
+    while (visibleTotal > 21 && visibleAces > 0) {
+        visibleTotal -= 10;
+        visibleAces--;
+    }
+
+    this->score = total;
+    this->visibleScore = visibleTotal;
 }
 
 void Hand::display() {
