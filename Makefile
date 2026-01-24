@@ -11,7 +11,8 @@ THIRDPARTY = third_party/bcrypt
 BCRYPT_INC = -I$(THIRDPARTY)/include -I$(THIRDPARTY)/src
 
 # ================== Sources communes ==================
-COMMON_SOURCES := $(wildcard $(SOURCEDIR)/*.cpp) \
+COMMON_SOURCES := $(wildcard $(SOURCEDIR)/**/*.cpp) \
+                  $(wildcard $(SOURCEDIR)/*.cpp) \
                   $(wildcard $(THIRDPARTY)/src/*.cpp)
 
 # ================== Sources par app ==================
